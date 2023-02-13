@@ -61,8 +61,8 @@ If a package is already installed, you will need to load it every session. You c
 
 ```{r Installing and loading packages}
 # We will use the packages dplyr and ggplot2 regularly. 
-#install.packages("dplyr") 
-#install.packages("ggplot2")
+install.packages("dplyr") 
+install.packages("ggplot2")
 # comment out install commands, use only when needed and re-comment
 
 library(dplyr)
