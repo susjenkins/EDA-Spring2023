@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5: Data Visualization"
-author: "Student Name"
+author: "Susanna Jenkins"
 date: "Spring 2023"
 output: pdf_document
 geometry: margin=2.54cm
@@ -32,8 +32,20 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 
 ```{r initialize project}
 #1 
+library(tidyverse); library(lubridate); library(here); library(cowplot);
+
+here()
+
+PeterPaul.chem.nutrients <- 
+  read.csv(here("Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"), stringsAsFactors = TRUE)
+
+NiwotRidge.litter <- 
+  read.csv(here("Data/Processed_KEY/NEON_NIWO_Litter_mass_trap_Processed.csv"), stringsAsFactors = TRUE)
 
 #2 
+
+PeterPaul.chem.nutrients$sampledate <- ymd(PeterPaul.chem.nutrients$sampledate)
+NiwotRidge.litter$collectDate <- ymd(NiwotRidge.litter$collectDate)
 
 ```
 ## Define your theme
@@ -47,6 +59,20 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 ```{r build plot theme}
 #3
 
+library(ggthemes)
+
+susanna_theme <- theme_base() + 
+  theme(
+    plot.title = element_text(
+      color='purple'
+    ),
+    plot.background = element_rect(
+      color = 'blue',
+      fill = 'grey'
+    ),
+    legend.position = 'right'
+    )
+
 ```
 
 ## Create graphs
@@ -56,6 +82,20 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 
 ```{r plot total P vs PO4}
 #4 
+
+Plot4 <- 
+  ggplot(PeterPaul.chem.nutrients, aes(
+    x = tp_ug, 
+    y = po4,
+    color = lakename,
+    shape = lakename)) + 
+  geom_point() +
+  facet_wrap(vars(lakename)) + 
+  geom_smooth(method=lm, color = "black") +
+  xlim(0, 85) +
+  ylim(0, 15) +
+  labs(x="Total Phosphorous", y="Phosphate", title = "Total Phosphorus by Phosphate in Peter + Paul Lakes", color = "Lake")
+print(Plot4)
 
 ```
 
@@ -67,7 +107,51 @@ Tip: R has a build in variable called `month.abb` that returns a list of months;
 ```{r Create boxplots}
 #5 
 
+#(a)
+
+TemperaturePlot <- 
+  ggplot(PeterPaul.chem.nutrients, aes(x = factor(month, levels = 1:12, labels=month.abb), y = temperature_C)) +
+  geom_boxplot(aes(color = lakename)) +
+  labs(
+    x = "month",
+    y = 'Temperature',
+    title = 'Temperature',
+    color = 'lakename'
+  ) + theme(legend.position = "top")
+print(TemperaturePlot)
+
+#(b)
+
+TPPlot <-
+  ggplot(PeterPaul.chem.nutrients, aes(x = factor(month, levels = 1:12, labels=month.abb), y = tp_ug)) +
+  geom_boxplot(aes(color = lakename)) +
+  labs(
+    x = "month",
+    y = 'Total P',
+    title = 'Total P',
+    color = 'lakename') + theme(legend.position =  "none")
+print(TPPlot)
+
+#(c)
+
+TNPlot <-
+  ggplot(PeterPaul.chem.nutrients, aes(x = factor(month, levels = 1:12, labels=month.abb), y = tn_ug)) +
+  geom_boxplot(aes(color = lakename)) +
+  labs(
+    x = "month",
+    y = 'Total N',
+    title = 'Total N',
+    color = 'lakename'
+  )  + theme(legend.position =  "none")
+print(TNPlot)
+
+library(cowplot)
+
+plot_grid(TemperaturePlot,TPPlot, TNPlot, nrow = 3, align = 'h')
+
 ```
+
+
 
 Question: What do you observe about the variables of interest over seasons and between lakes? 
 
@@ -80,11 +164,39 @@ Question: What do you observe about the variables of interest over seasons and b
 ```{r Plot litter}
 #6
 
+PlotLitter <- 
+  ggplot(subset(NiwotRidge.litter, functionalGroup == "Needles"), aes(
+    x = collectDate, 
+    y = dryMass,
+    color = nlcdClass)) + 
+  geom_point() +
+  labs(
+    x = "Collection Date",
+    y = 'Dry Mass - Needles',
+    title = 'Dry Mass of Needle Litter by Date', 
+    color='NLCD Class') +
+  ylim(0, 20) 
+print(PlotLitter)
 
 #7
 
+PlotLitter_Facets <- 
+  ggplot(subset(NiwotRidge.litter, functionalGroup == "Needles"), aes(
+    x = collectDate, 
+    y = dryMass)) + 
+  geom_point() +
+  labs(
+    x = "Collection Date",
+    y = 'Dry Mass - Needles',
+    title = 'Dry Mass of Needle Litter by Date', 
+    color='NLCD Class') +
+  ylim(0, 20) +
+  facet_wrap(vars(nlcdClass))
+print(PlotLitter_Facets)
 
 ```
 Question: Which of these plots (6 vs. 7) do you think is more effective, and why? 
 
-> Answer:
+> Answer: I personally find the first plot (6) more effective because it is 
+allows for more visually obvious benchmarking of the litter collection by year 
+between the 3 different land cover classes. Color helps me significantly.

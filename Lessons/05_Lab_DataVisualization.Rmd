@@ -49,6 +49,9 @@ ggplot(data=data.frame(x=0,y=0))+
     label=expression(paste("Mean is ", mu,",", R^{2},'=0.6'))
     )
 
+#paste() command brings together strings; paste0() does not insert spaces
+#expression command says this is an expression, not just raw text' is needed because "mu" and "other"R^{}" is not a string; 
+
 #Print the plot
 print(Plot_text)
 
@@ -62,6 +65,8 @@ ggsave(
   dpi = 300
   )
 
+#creates an output fodler if you do not specify folder/have a folder; this ggsave created an 'Output' folder
+
 ```
 
 ---
@@ -74,6 +79,11 @@ ggsave(
 processed_data = "Data/Processed_KEY"
 
 #Read in data
+
+  #here() points to what you opened to open this project; a little more stable than setwd
+
+  #here(processeddata >> this inserts path; then do strings as factors)
+
 PeterPaul.chem.nutrients <- read.csv(
   here(processed_data,"NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"),
   stringsAsFactors = TRUE)
@@ -92,15 +102,41 @@ EPAair$Date <- ymd(EPAair$Date)
 Say we want to plot the number of records each month in the Peter/Paul lakes dataset. How might we do that? What challenges do we face? 
 
 ```{r Plot the number of records by month}
-#What kind of values are months?
+#What kind of values are months? USE CLASS (OR GLIMPSE)
+class(PeterPaul.chem.nutrients$month)
 
 #List unique values
+unique(PeterPaul.chem.nutrients$month)
 
 #Plot how many Lake observations occur each month
+ggplot(PeterPaul.chem.nutrients,
+       aes(x=month)) +
+  geom_histogram(bins=12)
 
 #Convert month to a factor -- with 12 levels, labelled with month names
+factor(PeterPaul.chem.nutrients$month)
+
+factor(PeterPaul.chem.nutrients$month,
+       levels = 1:12,
+       labels = month.abb)
+
+  #month.abb converts number labels to month names 
+
+  #this shows the levels aka the categories found aka the unique (treated as categories)
 
 #Try again: Plot how many Lake observations occur each month
+ggplot(PeterPaul.chem.nutrients,
+       aes(x=factor(month, levels = 1:12, labels=month.abb))) +
+  geom_bar() +
+    scale_x_discrete(drop=FALSE) + 
+  labs(
+    title = "My Plot", 
+    X = "Month"
+    ) + xlab("month") 
+
+#NEED HELP REDOING LABELS 
+
+  #month.abb >> adds months of the year labels
 
 #Alter to include missing months
 
@@ -138,6 +174,8 @@ surface_temp_1999_plot <- PeterPaul.chem.nutrients %>%
       color=lakename)
     ) + 
   geom_line()
+
+  #running just surface_temp_1999_plot with <- after saves it with all of the following code (???) 
 
 #Show the basic plot
 surface_temp_1999_plot
@@ -228,6 +266,27 @@ Exercise: build your own scatterplots of PeterPaul.chem.nutrients
 # Plot surface temperatures by day of  year. 
 # Color your points by year, and facet by lake in two rows.
 # Change the ylab name
+
+PeterPaul.chem.nutrients %>% 
+  filter(depth == 0) %>% 
+  ggplot(aes(
+      y=temperature_C,
+      x=daynum,
+      color=year4)
+    ) + 
+  geom_point(size=0.5,alpha=0.5) +
+  facet_wrap(vars(lakename)) +
+  labs(
+    title = "Surface Temperature vs Day of Year by Year",
+    y = "Surface Temperature (C)",
+    x = "Day of Year",
+    color = "Year"
+  )
+  
+#geom is setting point size
+#alpha sets the transparency  
+#facet wrap adds another dimension to data
+
 
 
 #2. 
