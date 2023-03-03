@@ -76,17 +76,28 @@ glimpse(EPA.AirPM25.NC19)
 
 ```{r}
 #3
-EPA.AirO3.NC18$Date <- as.Date(EPA.AirO3.NC18$Date, format = "%m/%d/%y")
-class(EPA.AirO3.NC18$Date)
+ #EPA.AirO3.NC18$Date <- as.Date(EPA.AirO3.NC18$Date, format = "%m/%d/%y")
+#class(EPA.AirO3.NC18$Date)
 
-EPA.Air03.NC19$Date <- as.Date(EPA.Air03.NC19$Date, format = "%m/%d/%y")
-class(EPA.Air03.NC19$Date)
+#EPA.Air03.NC19$Date <- as.Date(EPA.Air03.NC19$Date, format = "%m/%d/%y")
+#class(EPA.Air03.NC19$Date)
 
-EPA.AirPM25.NC18$Date <- as.Date(EPA.AirPM25.NC18$Date, format = "%m/%d/%y")
-class(EPA.AirPM25.NC18$Date)
+#EPA.AirPM25.NC18$Date <- as.Date(EPA.AirPM25.NC18$Date, format = "%m/%d/%y")
+#class(EPA.AirPM25.NC18$Date)
 
-EPA.AirPM25.NC19$Date <- as.Date(EPA.AirPM25.NC19$Date, format = "%m/%d/%y")
-class(EPA.AirPM25.NC19$Date)
+#EPA.AirPM25.NC19$Date <- as.Date(EPA.AirPM25.NC19$Date, format = "%m/%d/%y")
+#class(EPA.AirPM25.NC19$Date)
+
+
+EPA.AirPM25.NC18$Date <- mdy(EPA.AirPM25.NC18$Date)
+
+EPA.AirPM25.NC19$Date <- mdy(EPA.AirPM25.NC19$Date)
+
+EPA.AirO3.NC18$Date <- mdy(EPA.AirO3.NC18$Date)
+
+EPA.Air03.NC19$Date <- mdy(EPA.Air03.NC19$Date)
+
+
 
 #4
 EPA.AirO3.NC18.NEW <- select(EPA.AirO3.NC18, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
@@ -155,6 +166,8 @@ EPA.AirPM25.NC18.NEW <- read.csv("./Data/Processed/EPA.AirPM25.NC18.processed.cs
 EPA.AirPM25.NC19.NEW <- read.csv("./Data/Processed/EPA.AirPM25.NC19.processed.csv")
 
 EPA.Air.Processed <- rbind(EPA.AirO3.NC18.NEW, EPA.Air03.NC19.NEW, EPA.AirPM25.NC18.NEW, EPA.AirPM25.NC19.NEW)
+
+dim(EPA.Air.Processed)
 
 ```
 
