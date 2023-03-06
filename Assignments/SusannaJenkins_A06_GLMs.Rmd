@@ -231,7 +231,8 @@ AvgTemps.July.groups
 >Answer: Paul Lake and Ward Lake have the same mean temperatures statistically 
 speaking as Peter Lake. Not only are the P values greater that 0.05, meaning we 
 accept the null hypothesis, but the HSD test also shows they share 'c' with Peter 
-Lake -- Ward Lake returns 'bc'; Paul Lake returns 'c'.
+Lake -- Ward Lake returns 'bc'; Paul Lake returns 'c'. Central long Lake has a 
+mean temperature that is statistically distinct from all other lakes.
 
 17. If we were just looking at Peter Lake and Paul Lake. What's another test we might explore to see whether they have distinct mean temperatures? 
 
