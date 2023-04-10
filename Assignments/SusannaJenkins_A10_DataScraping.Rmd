@@ -1,6 +1,6 @@
 ---
 title: "Assignment 10: Data Scraping"
-author: "Student Name"
+author: "Susanna Jenkins"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -29,6 +29,12 @@ This exercise accompanies the lessons in Environmental Data Analytics on data sc
 ```{r, message = FALSE}
 #1
 
+library(tidyverse)
+library(rvest)
+library(lubridate)
+library(dplyr)
+
+getwd()
 
 ```
 
@@ -42,6 +48,10 @@ Indicate this website as the as the URL to be scraped. (In other words, read the
 ```{r set.the.scraping.website}
 #2
 
+websiteURL <- 
+  read_html('https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2022')
+
+websiteURL
 
 ```
 
@@ -61,13 +71,21 @@ In the code chunk below scrape these values, assigning them to four separate var
 
 ```{r scrape.the.data}
 #3
-water.system.name <- 
-  
-PWSID <- 
-  
-ownership <- 
+water.system.name <- websiteURL %>% 
+  html_nodes("div+ table tr:nth-child(1) td:nth-child(2)") %>% 
+  html_text()
 
-max.withdrawals.mgd <- 
+PWSID <- websiteURL %>% 
+  html_nodes("td tr:nth-child(1) td:nth-child(5)") %>% 
+  html_text()
+
+ownership <- websiteURL %>% 
+  html_nodes("div+ table tr:nth-child(2) td:nth-child(4)") %>%  
+  html_text()
+  
+max.withdrawals.mgd <- websiteURL %>% 
+  html_nodes('th~ td+ td') %>%
+  html_text()
 
 ```
 
@@ -78,15 +96,32 @@ max.withdrawals.mgd <-
 
 >NOTE: It's likely you won't be able to scrape the monthly widthrawal data in chronological order. You can overcome this by creating a month column manually assigning values in the order the data are scraped: "Jan", "May", "Sept", "Feb", etc... Or, you could scrape month values from the web page...
 
-5. Create a line plot of the average daily withdrawals across the months for 2022
+5. Create a line plot of the average (**MAX) daily withdrawals across the months for 2022
 
 ```{r create.a.dataframe.from.scraped.data}
 #4
 
+df.withdrawals.Durham <- data.frame("Month" = c(1,5,9,2,6,10,3,7,11,4,8,12),
+                             "Year" = rep(2022,12),
+                             "Max_Withdrawals_mgd" = 
+                               as.numeric(max.withdrawals.mgd)) %>% 
+  mutate("WaterSystemName" = !!water.system.name,
+         "PWSID" = !!PWSID,
+         "Ownership" = !!ownership,
+         Date = my(paste(Month,"-",Year)))
 
+df.withdrawals.Durham
 
 #5
 
+ggplot(df.withdrawals.Durham, aes(x = Date, y = Max_Withdrawals_mgd)) + 
+  geom_line() + 
+  geom_smooth(method="loess",se=FALSE) +
+  labs(title = paste("2022 Local Durham Water Usage Data for",water.system.name),
+       subtitle = PWSID,
+       y = "Max Withdrawal (mgd)",
+       x = "Date") +
+  theme_bw()
 
 ```
 
@@ -95,6 +130,44 @@ max.withdrawals.mgd <-
 ```{r construct.a.scraping.function}
 #6.
 
+base.URL <- 
+  'https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid='
+PWSID.scrape <- '03-32-010'
+year.scrape <- 2022
+
+scrape.MGD <- function(PWSID.scrape, year.scrape){
+
+the.website <-read_html(paste0(base.URL, PWSID.scrape, '&year=', year.scrape))
+    
+water.system.tag <- 'div+ table tr:nth-child(1) td:nth-child(2)'
+PWSID.tag <- 'td tr:nth-child(1) td:nth-child(5)'
+ownership.tag <- 'div+ table tr:nth-child(2) td:nth-child(4)'
+max.withdrawals.tag <- 'th~ td+ td'
+
+the.water.system.name <- 
+  the.website %>% html_nodes(water.system.tag) %>% html_text()
+
+the.PWSID <- 
+  the.website %>% html_nodes(PWSID.tag) %>%  html_text()
+
+the.ownership <- 
+  the.website %>% html_nodes(ownership.tag) %>% html_text()
+
+the.max.withdrawals <- 
+  the.website %>% html_nodes(max.withdrawals.tag) %>% html_text()
+
+df.withdrawals <- 
+  data.frame("Month" = c(1,5,9,2,6,10,3,7,11,4,8,12),
+             "Year" = rep(year.scrape,12), 
+             "Max.Withdrawals.mgd" = as.numeric(the.max.withdrawals)) %>% 
+  mutate("WaterSystemName" = !!the.water.system.name,
+         "PWSID" = !!the.PWSID,
+         "Ownership" = !!the.ownership,
+         Date = my(paste(Month,"-",Year)))
+
+return(df.withdrawals)
+
+}
 
 ```
 
@@ -103,6 +176,16 @@ max.withdrawals.mgd <-
 ```{r fetch.and.plot.Durham.2015.data}
 #7
 
+withdrawal.2015.df <- scrape.MGD('03-32-010', 2015)
+view(withdrawal.2015.df)
+
+ggplot(withdrawal.2015.df, aes(x = Date, y = Max.Withdrawals.mgd)) + 
+  geom_line() + 
+  geom_smooth(se = FALSE) +
+  labs(title = paste(year.scrape,"Local Durham Water Usage Data for Durham"),
+       subtitle = PWSID.scrape,
+       x = "Date",
+       y = "Max Withdrawal (mgd)")
 
 ```
 
@@ -111,6 +194,18 @@ max.withdrawals.mgd <-
 ```{r fetch.and.plot.Asheville.2015.data}
 #8
 
+withdrawal.Asheville.2015.df <- scrape.MGD('01-11-010', 2015)
+view(withdrawal.Asheville.2015.df)
+
+Asheville.Durham <- rbind(withdrawal.Asheville.2015.df, withdrawal.2015.df)
+
+ggplot(Asheville.Durham, aes(x = Date, y = Max.Withdrawals.mgd, 
+                             color=WaterSystemName)) + 
+  geom_line() +
+  labs(title = "2015 Local Water Usage Data for Durham & Asheville",
+       subtitle = PWSID.scrape,
+       x = "Date",
+       y = "Max Withdrawal (mgd)")
 
 ```
 
@@ -122,6 +217,23 @@ max.withdrawals.mgd <-
 ```{r fetch.and.plot.Asheville.multiyear.data }
 #9 
 
+years = rep(2010:2021)
+PWSID.scrape = '01-11-010'
+
+Asheville.2010.2021 <- map2(PWSID.scrape, years, scrape.MGD) 
+
+Asheville.10.21 <- bind_rows(Asheville.2010.2021)
+
+ggplot(Asheville.10.21,aes(x=Date,y=Max.Withdrawals.mgd)) + 
+  geom_line() + 
+  geom_smooth(method="loess",se=FALSE) +
+  labs(title = "2010-2021 Water usage data for Asheville",
+       y="Max Withdrawal (mgd)",
+       x="Date")
+
 ```
 
 > Question: Just by looking at the plot (i.e. not running statistics), does Asheville have a trend in water usage over time?
+Over time, it looks like it is slightly increasing over time. It appears there is 
+seasonality in the data but generally it looks to be increasing overall from 2010 
+to 2021.
